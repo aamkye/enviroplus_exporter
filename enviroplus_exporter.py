@@ -156,7 +156,7 @@ PRESSURE = Gauge('pressure','Pressure measured (hPa)')
 HUMIDITY = Gauge('humidity','Relative humidity measured (%)')
 OXIDISING = Gauge('oxidising','Mostly nitrogen dioxide but could include NO and Hydrogen (Ohms)')
 REDUCING = Gauge('reducing', 'Mostly carbon monoxide but could include H2S, Ammonia, Ethanol, Hydrogen, Methane, Propane, Iso-butane (Ohms)')
-NH3 = Gauge('NH3', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (Ohms)') 
+NH3 = Gauge('NH3', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (Ohms)')
 LUX = Gauge('lux', 'current ambient light level (lux)')
 PROXIMITY = Gauge('proximity', 'proximity, with larger numbers being closer proximity and vice versa')
 PM1 = Gauge('PM1', 'Particulate Matter of diameter less than 1 micron. Measured in micrograms per cubic metre (ug/m3)')
@@ -195,7 +195,7 @@ LUFTDATEN_TIME_BETWEEN_POSTS = int(os.getenv('LUFTDATEN_TIME_BETWEEN_POSTS', '30
 # delay between each write to lcd
 WRITE_TO_LCD_TIME = int(os.getenv('WRITE_TO_LCD_TIME', '4'))
 
-# Sometimes the sensors can't be read. Resetting the i2c 
+# Sometimes the sensors can't be read. Resetting the i2c
 def reset_i2c():
     subprocess.run(['i2cdetect', '-y', '1'])
     time.sleep(2)
@@ -269,7 +269,7 @@ def get_temperature(factor_usr):
     else:
         temperature = raw_temp
 
-    
+
     # cpu_temps = [get_cpu_temperature()] * 5
     # cpu_temp = get_cpu_temperature()
     # # Smooth out with some averaging to decrease jitter
@@ -390,6 +390,8 @@ def collect_all_data():
     sensor_data['noise_profile_mid_freq'] = NOISE_PROFILE_MID_FREQ.collect()[0].samples[0].value
     sensor_data['noise_profile_high_freq'] = NOISE_PROFILE_HIGH_FREQ.collect()[0].samples[0].value
     sensor_data['noise_profile_amp'] = NOISE_PROFILE_AMP.collect()[0].samples[0].value
+
+    print(TEMPERATURE.collect())
     return sensor_data
 
 #mqtt
@@ -433,7 +435,7 @@ def post_data_mqtt():
     while True:
         global mqtt_client
         if MQTT_CONNECTED and (time.time() - last_mqtt_post) > (MQTT_POST_INTERVAL_MILLIS / 1000.0):
-            try:    
+            try:
                 sensor_data = collect_all_data()
                 mqtt_client.publish(f"{MQTT_TOPIC}/enviro_plus_temperature", json.dumps({"temperature": sensor_data['temperature']}), qos=1, retain=True)
                 mqtt_client.publish(f"{MQTT_TOPIC}/enviro_plus_humidity", json.dumps({"humidity": sensor_data['humidity']}), qos=1, retain=True)
@@ -476,7 +478,7 @@ def home_assistant_discovery():
         "unique_id": "enviro_plus_humidity",
         "availability_topic": f"{MQTT_TOPIC}/enviro_plus/availability",
         "state_topic": f"{MQTT_TOPIC}/enviro_plus_humidity",
-        "unit_of_measurement": "%",   
+        "unit_of_measurement": "%",
         "value_template": "{{ value_json.humidity | round(1) }}",
         "device_class": "humidity",
     }
@@ -638,7 +640,7 @@ def home_assistant_discovery():
 
     mqtt_client.publish(f"{MQTT_TOPIC}/enviro_plus/availability", "online", 1, retain=True)
 
-    
+
 
 def write_to_lcd():
     """Write dta to eniro lcd"""
@@ -916,7 +918,7 @@ if __name__ == '__main__':
     # Start up the server to expose the metrics.
     start_http_server(addr=args.bind, port=args.port)
     # Generate some requests.
-    
+
     polling_interval = args.polling
 
     if args.debug:
@@ -951,7 +953,7 @@ if __name__ == '__main__':
         MQTT_TOPIC = mqttdata[4]
         MQTT_POST_INTERVAL_MILLIS = float(mqttdata[5])
         logging.info("Sensor data will be posted to MQTT every {} seconds to topic {}/+".format(MQTT_POST_INTERVAL_MILLIS, MQTT_TOPIC))
-        
+
         connect_mqtt()
         mqtt_publisher__thread = Thread(target=post_data_mqtt)
         mqtt_publisher__thread.start()
@@ -969,7 +971,7 @@ if __name__ == '__main__':
         get_light()
         get_gas()
         get_noise_profile()
-        
+
         if not args.enviro:
             get_gas()
             get_particulates()
