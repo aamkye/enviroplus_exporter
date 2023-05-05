@@ -371,14 +371,14 @@ def write_to_lcd():
                 variable = variables[i]
                 data_value = sensor_data[variable]
                 unit = units[i]
-                message = "{}: {:.1f} {}".format(variable[:1].capitalize(), data_value, unit)
+                message = "{:.1f} {}".format(data_value, unit)
                 logging.debug('Writing to LCD: {}'.format(message))
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
                 size_x, size_y = draw.textsize(message, font)
                 while size_x > WIDTH:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font.size - 2)
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font.size - 2)
                     size_x, size_y = draw.textsize(message, font)
                 draw.text((0, 0), message, font=font, fill=(255, 255, 255))
                 st7735.display(img)
