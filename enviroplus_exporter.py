@@ -363,7 +363,7 @@ def write_to_lcd():
             ]
 
             units = [
-                    "C",
+                    "°C",
                     "hPa",
                     "%",
             ]
@@ -375,7 +375,7 @@ def write_to_lcd():
                 logging.debug('Writing to LCD: {}'.format(message))
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
                 size_x, size_y = draw.textsize(message, font)
                 while size_x > WIDTH:
                     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font.size - 2)
