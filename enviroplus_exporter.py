@@ -371,7 +371,7 @@ def write_to_lcd():
                 variable = variables[i]
                 data_value = sensor_data[variable]
                 unit = units[i]
-                message = "{:.1f} {}".format(data_value, unit)
+                message = "{:.1f}{}".format(data_value, unit)
                 logging.debug('Writing to LCD: {}'.format(message))
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
