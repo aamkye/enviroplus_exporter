@@ -958,8 +958,9 @@ if __name__ == '__main__':
         mqtt_publisher__thread = Thread(target=post_data_mqtt)
         mqtt_publisher__thread.start()
 
-    lcd_thread = Thread(target=write_to_lcd)
-    lcd_thread.start()
+    if args.lcd:
+        lcd_thread = Thread(target=write_to_lcd)
+        lcd_thread.start()
 
     logging.info("Listening on http://{}:{}".format(args.bind, args.port))
 
