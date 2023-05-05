@@ -441,7 +441,7 @@ if __name__ == '__main__':
         get_pressure()
         get_light()
         get_gas()
-        get_noise_profile()
+        # get_noise_profile()
 
         if not args.enviro:
             get_gas()
