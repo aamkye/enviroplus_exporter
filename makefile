@@ -3,10 +3,12 @@ all: install start enable
 clean: disable stop uninstall
 
 install:
+	cp $(CURDIR)/enviroplus_exporter.py /usr/bin/enviroplus_exporter.py
 	ln -sf $(CURDIR)/systemd/enviroplus_exporter.service /etc/systemd/system/enviroplus_exporter.service
 
 uninstall:
 	rm -f /etc/systemd/system/enviroplus_exporter.service
+	rm -f /usr/bin/enviroplus_exporter.py
 
 start:
 	systemctl start enviroplus_exporter
