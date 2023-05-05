@@ -23,3 +23,6 @@ enable:
 
 disable:
 	systemctl disable enviroplus_exporter
+
+upgrade:
+	git pull && make install && systemctl restart enviroplus_exporter
