@@ -227,7 +227,9 @@ def get_gas():
         reset_i2c()
         return None, None, None, None, None, None
 
-def collect_gas(ox, red, nh3, ox_in_ppm, red_in_ppm, nh3_in_ppm):
+def collect_gas(data):
+    """Collect the gas readings"""
+    ox, red, nh3, ox_in_ppm, red_in_ppm, nh3_in_ppm = data
     if ox:
         OXIDISING.labels(RBPI_SERIAL).set(ox)
         OXIDISING_HIST.labels(RBPI_SERIAL).observe(ox)
@@ -270,17 +272,15 @@ def get_light():
     try:
         lux = ltr559.get_lux()
         prox = ltr559.get_proximity()
-
-        LUX.labels(RBPI_SERIAL).set(lux)
-        PROXIMITY.labels(RBPI_SERIAL).set(prox)
         return lux, prox
     except IOError:
         logging.error("Could not get lux and proximity readings. Resetting i2c.")
         reset_i2c()
         return None, None
 
-def collect_light(lux, prox):
+def collect_light(data):
     """Collect the light readings"""
+    lux, prox = data
     if lux:
         LUX.labels(RBPI_SERIAL).set(lux)
     if prox:
@@ -300,8 +300,9 @@ def get_particulates():
         logging.warning("Could not get particulate matter readings.")
         return None, None, None
 
-def collect_particulates(pm1, pm25, pm10):
+def collect_particulates(data):
     """Collect the particulate matter readings"""
+    pm1, pm25, pm10 = data
     if pm1:
         PM1.labels(RBPI_SERIAL).set(pm1)
         PM1_HIST.labels(RBPI_SERIAL).observe(pm1)
