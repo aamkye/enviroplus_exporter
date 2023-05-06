@@ -144,7 +144,7 @@ def get_temperature(factor_usr):
     # temperature down, and increase to adjust up
     raw_temp = bme280.get_temperature()
 
-    factor = 1.3
+    factor = 1.5
 
     if factor_usr:
         factor = factor_usr
@@ -319,10 +319,10 @@ def write_to_lcd():
                     [-20, 0, 55, 95], # CPU Temperature
                     [250, 650, 1013.25, 1025], # Pressure
                     [20, 30, 60, 70], # Humidity
-                    [-1, 1000, 30000, 100000], # Lux
-                    [-1, 1100, 1600, 2600], # Oxidised
-                    [-1, 1100, 1600, 2600], # Reduced
-                    [-1, 200, 400, 600],] # NH3
+                    [-1, -1, 1000, 2000], # Lux
+                    [-1, -1, 1600, 2600], # Oxidised
+                    [-1, -1, 1600, 2600], # Reduced
+                    [-1, -1, 400, 600],] # NH3
 
                 # RGB palette for values on the combined screen
                 palette = [
