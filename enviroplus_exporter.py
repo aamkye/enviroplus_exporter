@@ -1,36 +1,21 @@
 #!/usr/bin/env python3
-import datetime
-import os
-import random
-import requests
 import time
-import logging
-import argparse
 import subprocess
-import serial
-from threading import Thread
-import json
-import uuid
-import math
-
-import board
-from prometheus_client import start_http_server, Gauge, Histogram
-import SafecastPy
-# import notecard.notecard as notecard
-from periphery import Serial
-
-from bme280 import BME280
-from enviroplus import gas
-from enviroplus.noise import Noise
-from pms5003 import PMS5003, ReadTimeoutError as pmsReadTimeoutError, SerialTimeoutError as pmsSerialTimeoutError
-
-import colorsys
 import ST7735
+import serial
+import os
+import math
+import logging
+import board
+import argparse
+from threading import Thread
+from prometheus_client import start_http_server, Gauge, Histogram
+from pms5003 import PMS5003, ReadTimeoutError as pmsReadTimeoutError, SerialTimeoutError as pmsSerialTimeoutError
 from PIL import Image, ImageDraw, ImageFont
-from fonts.ttf import RobotoMedium as UserFont
-from pms5003 import PMS5003
+from enviroplus.noise import Noise
+from enviroplus import gas
+from bme280 import BME280
 from adafruit_lc709203f import LC709203F, PackSize
-import paho.mqtt.client as mqtt
 
 try:
     from smbus2 import SMBus
@@ -44,6 +29,8 @@ try:
 except ImportError:
     import ltr559
 
+# ----------------------------------------------------------------------------------------------
+
 logging.basicConfig(
     format='%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -51,19 +38,16 @@ logging.basicConfig(
               logging.StreamHandler()],
     datefmt='%Y-%m-%d %H:%M:%S')
 
-logging.info("""enviroplus_exporter.py - Expose readings from the Enviro+ sensor by Pimoroni in Prometheus format
-
-Press Ctrl+C to exit!
-
-""")
-
-DEBUG = os.getenv('DEBUG', 'false') == 'true'
-
-RBPI_SERIAL = ""
+# ----------------------------------------------------------------------------------------------
 
 bus = SMBus(1)
 bme280 = BME280(i2c_dev=bus)
 noise = Noise()
+
+try:
+    pms5003 = PMS5003()
+except serial.serialutil.SerialException:
+    logging.warning("Failed to initialise PMS5003.")
 
 # Initialize display
 st7735 = ST7735.ST7735(
@@ -74,45 +58,15 @@ st7735 = ST7735.ST7735(
     rotation=270,
     spi_speed_hz=10000000
 )
-
-# Initialize display
 st7735.begin()
+
+# ----------------------------------------------------------------------------------------------
 
 WIDTH = st7735.width
 HEIGHT = st7735.height
 
-# Set up canvas and font
-img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
-draw = ImageDraw.Draw(img)
-
-# Define your own warning limits
-# The limits definition follows the order of the variables array
-# Example limits explanation for temperature:
-# [4,18,28,35] means
-# [-273.15 .. 4] -> Dangerously Low
-# (4 .. 18]      -> Low
-# (18 .. 28]     -> Normal
-# (28 .. 35]     -> High
-# (35 .. MAX]    -> Dangerously High
-# DISCLAIMER: The limits provided here are just examples and come
-# with NO WARRANTY. The authors of this example code claim
-# NO RESPONSIBILITY if reliance on the following values or this
-# code in general leads to ANY DAMAGES or DEATH.
-
-
-
-try:
-    pms5003 = PMS5003()
-except serial.serialutil.SerialException:
-    logging.warning("Failed to initialise PMS5003.")
-
-battery_sensor = False
-try:
-    sensor = LC709203F(board.I2C())
-    battery_sensor = True
-except ValueError:
-    pass
-
+DEBUG = os.getenv('DEBUG', 'false') == 'true'
+RBPI_SERIAL = ""
 PREFIX = os.getenv('PREFIX', 'enviroplus_')
 
 TEMPERATURE = Gauge(PREFIX+'temperature','Temperature measured (*C)', ['serial'])
@@ -120,15 +74,15 @@ PRESSURE = Gauge(PREFIX+'pressure','Pressure measured (hPa)', ['serial'])
 HUMIDITY = Gauge(PREFIX+'humidity','Relative humidity measured (%)', ['serial'])
 OXIDISING = Gauge(PREFIX+'oxidising','Mostly nitrogen dioxide but could include NO and Hydrogen (Ohms)', ['serial'])
 REDUCING = Gauge(PREFIX+'reducing', 'Mostly carbon monoxide but could include H2S, Ammonia, Ethanol, Hydrogen, Methane, Propane, Iso-butane (Ohms)', ['serial'])
-NH3 = Gauge(PREFIX+'NH3', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (Ohms)', ['serial'])
+NH3 = Gauge(PREFIX+'nh3', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (Ohms)', ['serial'])
 OXIDISING_PPM = Gauge(PREFIX+'oxidising_ppm','Mostly nitrogen dioxide but could include NO and Hydrogen (ppm)', ['serial'])
 REDUCING_PPM = Gauge(PREFIX+'reducing_ppm', 'Mostly carbon monoxide but could include H2S, Ammonia, Ethanol, Hydrogen, Methane, Propane, Iso-butane (ppm)', ['serial'])
-NH3_PPM = Gauge(PREFIX+'NH3_PPM', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (ppm)', ['serial'])
+NH3_PPM = Gauge(PREFIX+'nh3_ppm', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (ppm)', ['serial'])
 LUX = Gauge(PREFIX+'lux', 'current ambient light level (lux)', ['serial'])
 PROXIMITY = Gauge(PREFIX+'proximity', 'proximity, with larger numbers being closer proximity and vice versa', ['serial'])
-PM1 = Gauge(PREFIX+'PM1', 'Particulate Matter of diameter less than 1 micron. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
-PM25 = Gauge(PREFIX+'PM25', 'Particulate Matter of diameter less than 2.5 microns. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
-PM10 = Gauge(PREFIX+'PM10', 'Particulate Matter of diameter less than 10 microns. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
+PM1 = Gauge(PREFIX+'pm1', 'Particulate Matter of diameter less than 1 micron. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
+PM25 = Gauge(PREFIX+'pm25', 'Particulate Matter of diameter less than 2.5 microns. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
+PM10 = Gauge(PREFIX+'pm10', 'Particulate Matter of diameter less than 10 microns. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
 CPU_TEMPERATURE = Gauge(PREFIX+'cpu_temperature','CPU temperature measured (*C)', ['serial'])
 BATTERY_VOLTAGE = Gauge(PREFIX+'battery_voltage','Voltage of the battery (Volts)', ['serial'])
 BATTERY_PERCENTAGE = Gauge(PREFIX+'battery_percentage','Percentage of the battery remaining (%)', ['serial'])
@@ -153,26 +107,28 @@ NOISE_PROFILE_AMP = Gauge(PREFIX+'noise_profile_amp', 'Noise profile of amplitud
 # delay between each write to lcd
 WRITE_TO_LCD_TIME = int(os.getenv('WRITE_TO_LCD_TIME', '3'))
 
+# ----------------------------------------------------------------------------------------------
+
 # Sometimes the sensors can't be read. Resetting the i2c
 def reset_i2c():
     subprocess.run(['i2cdetect', '-y', '1'])
     time.sleep(2)
 
-# Setup LC709203F battery monitor
-if battery_sensor:
-    if DEBUG:
-        logging.info('## LC709203F battery monitor ##')
-    try:
-        if DEBUG:
-            logging.info("Sensor IC version: {}".format(hex(sensor.ic_version)))
-        # Set the battery pack size to 3000 mAh
-        sensor.pack_size = PackSize.MAH3000
-        sensor.init_RSOC()
-        if DEBUG:
-            logging.info("Battery size: {}".format(PackSize.string[sensor.pack_sizes]))
-    except RuntimeError as exception:
-        logging.error("Failed to read sensor with error: {}".format(exception))
-        logging.info("Try setting the I2C clock speed to 10000Hz")
+def get_serial_number():
+    """Get Raspberry Pi serial number to use as LUFTDATEN_SENSOR_UID"""
+    with open('/proc/cpuinfo', 'r') as f:
+        for line in f:
+            if line[0:6] == 'Serial':
+                return str(line.split(":")[1].strip())
+
+def str_to_bool(value):
+    if value.lower() in {'false', 'f', '0', 'no', 'n'}:
+        return False
+    elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
+        return True
+    raise ValueError('{} is not a valid boolean value'.format(value))
+
+# ----------------------------------------------------------------------------------------------
 
 def get_cpu_temperature():
     """Get the temperature from the Raspberry Pi CPU"""
@@ -188,7 +144,7 @@ def get_temperature(factor_usr):
     # temperature down, and increase to adjust up
     raw_temp = bme280.get_temperature()
 
-    factor = 1.4
+    factor = 1.2
 
     if factor_usr:
         factor = factor_usr
@@ -197,12 +153,14 @@ def get_temperature(factor_usr):
     temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
 
     TEMPERATURE.labels(RBPI_SERIAL).set(temperature)   # Set to a given value
+    return temperature
 
 def get_pressure():
     """Get pressure from the weather sensor"""
     try:
         pressure = bme280.get_pressure()
         PRESSURE.labels(RBPI_SERIAL).set(pressure)
+        return pressure
     except IOError:
         logging.error("Could not get pressure readings. Resetting i2c.")
         reset_i2c()
@@ -212,6 +170,7 @@ def get_humidity(humidity_compensation):
     try:
         humidity = bme280.get_humidity()
         HUMIDITY.labels(RBPI_SERIAL).set(humidity)
+        return humidity
     except IOError:
         logging.error("Could not get humidity readings. Resetting i2c.")
         reset_i2c()
@@ -221,7 +180,6 @@ def get_gas():
     red_r0 = 200000
     ox_r0 = 20000
     nh3_r0 = 750000
-
 
     try:
         readings = gas.read_all()
@@ -246,33 +204,37 @@ def get_gas():
         NH3_PPM.labels(RBPI_SERIAL).set(nh3_in_ppm)
         NH3_PPM_HIST.labels(RBPI_SERIAL).observe(nh3_in_ppm)
 
+        return readings, ox_in_ppm, red_in_ppm, nh3_in_ppm
+
     except IOError:
         logging.error("Could not get gas readings. Resetting i2c.")
         reset_i2c()
 
-def get_noise_profile():
-    """Get the noise profile"""
-    try:
-        low = noise.get_amplitude_at_frequency_range(20, 200)
-        mid = noise.get_amplitude_at_frequency_range(200, 2000)
-        high = noise.get_amplitude_at_frequency_range(2000, 8000)
-        amp = noise.get_amplitude_at_frequency_range(20, 8000)
-        NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
-        NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
-        NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
-        NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
-    except IOError:
-        logging.error("Could not get noise profile. Resetting i2c.")
-        reset_i2c()
+# To be implemented in the future
+# def get_noise_profile():
+#     """Get the noise profile"""
+#     try:
+#         low = noise.get_amplitude_at_frequency_range(20, 200)
+#         mid = noise.get_amplitude_at_frequency_range(200, 2000)
+#         high = noise.get_amplitude_at_frequency_range(2000, 8000)
+#         amp = noise.get_amplitude_at_frequency_range(20, 8000)
+#         NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
+#         NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
+#         NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
+#         NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
+#     except IOError:
+#         logging.error("Could not get noise profile. Resetting i2c.")
+#         reset_i2c()
 
 def get_light():
     """Get all light readings"""
     try:
-       lux = ltr559.get_lux()
-       prox = ltr559.get_proximity()
+        lux = ltr559.get_lux()
+        prox = ltr559.get_proximity()
 
-       LUX.labels(RBPI_SERIAL).set(lux)
-       PROXIMITY.labels(RBPI_SERIAL).set(prox)
+        LUX.labels(RBPI_SERIAL).set(lux)
+        PROXIMITY.labels(RBPI_SERIAL).set(prox)
+        return lux, prox
     except IOError:
         logging.error("Could not get lux and proximity readings. Resetting i2c.")
         reset_i2c()
@@ -294,22 +256,13 @@ def get_particulates():
         PM25_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(2.5) - pms_data.pm_ug_per_m3(1.0))
         PM10_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(10) - pms_data.pm_ug_per_m3(2.5))
 
-def get_battery():
-    """Get the battery voltage and percentage left"""
-    try:
-        voltage_reading = sensor.cell_voltage
-        percentage_reading = sensor.cell_percent
-        BATTERY_VOLTAGE.labels(RBPI_SERIAL).set(voltage_reading)
-        BATTERY_PERCENTAGE.labels(RBPI_SERIAL).set(percentage_reading)
-        if DEBUG:
-            logging.info("Battery: {} Volts / {} %".format(sensor.cell_voltage, sensor.cell_percent))
-    except (RuntimeError, OSError) as exception:
-        logging.warning("Failed to read battery monitor with error: {}".format(exception))
+        return pms_data
 
 def collect_all_data():
     """Collects all the data currently set"""
     sensor_data = {}
     sensor_data['temperature'] = TEMPERATURE.collect()[0].samples[0].value
+    sensor_data['cpu_temperature'] = CPU_TEMPERATURE.collect()[0].samples[0].value
     sensor_data['humidity'] = HUMIDITY.collect()[0].samples[0].value
     sensor_data['pressure'] = PRESSURE.collect()[0].samples[0].value
     sensor_data['oxidising'] = OXIDISING.collect()[0].samples[0].value
@@ -323,9 +276,6 @@ def collect_all_data():
     # sensor_data['pm1'] = PM1.collect()[0].samples[0].value
     # sensor_data['pm25'] = PM25.collect()[0].samples[0].value
     # sensor_data['pm10'] = PM10.collect()[0].samples[0].value
-    sensor_data['cpu_temperature'] = CPU_TEMPERATURE.collect()[0].samples[0].value
-    # sensor_data['battery_voltage'] = BATTERY_VOLTAGE.collect()[0].samples[0].value
-    # sensor_data['battery_percentage'] = BATTERY_PERCENTAGE.collect()[0].samples[0].value
     # sensor_data['noise_profile_low_freq'] = NOISE_PROFILE_LOW_FREQ.collect()[0].samples[0].value
     # sensor_data['noise_profile_mid_freq'] = NOISE_PROFILE_MID_FREQ.collect()[0].samples[0].value
     # sensor_data['noise_profile_high_freq'] = NOISE_PROFILE_HIGH_FREQ.collect()[0].samples[0].value
@@ -414,20 +364,7 @@ def write_to_lcd():
         # except Exception as exception:
         #     logging.warning('Exception writing to LCD: {}'.format(exception))
 
-def get_serial_number():
-    """Get Raspberry Pi serial number to use as LUFTDATEN_SENSOR_UID"""
-    with open('/proc/cpuinfo', 'r') as f:
-        for line in f:
-            if line[0:6] == 'Serial':
-                return str(line.split(":")[1].strip())
-
-def str_to_bool(value):
-    if value.lower() in {'false', 'f', '0', 'no', 'n'}:
-        return False
-    elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
-        return True
-    raise ValueError('{} is not a valid boolean value'.format(value))
-
+# ----------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -443,9 +380,7 @@ if __name__ == '__main__':
 
     RBPI_SERIAL = get_serial_number()
 
-    # Start up the server to expose the metrics.
     start_http_server(addr=args.bind, port=args.port)
-    # Generate some requests.
 
     polling_interval = args.polling
 
