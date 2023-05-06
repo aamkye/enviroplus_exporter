@@ -211,23 +211,26 @@ def collect_cpu_temperature(temperature):
 def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
     try:
-        bme280.update_sensor()
         raw_temp = bme280.get_temperature()
-        factor = 1.8
+        factor = 2.0
         if factor_usr:
             factor = factor_usr
         cpu_temp = get_cpu_temperature()
-        temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
-        return temperature
+        temp = raw_temp - ((cpu_temp - raw_temp) / factor)
+        return temp, raw_temp
     except IOError:
         logging.error("Could not get temperature readings. Resetting i2c.")
         reset_i2c()
         return None
 
-def collect_temperature(temperature):
+def collect_temperature(data):
     """Collect the temperature from the weather sensor"""
-    if temperature:
-        TEMPERATURE.labels(RBPI_SERIAL).set(temperature)
+    temp, raw_temp = data
+    if temp:
+        TEMPERATURE.labels(RBPI_SERIAL).set(temp)
+    if raw_temp:
+        # RAW_TEMPERATURE.labels(RBPI_SERIAL).set(raw_temp)
+        pass
 
 # ----------------------------------------------------------------------------------------------
 
@@ -418,7 +421,7 @@ def write_to_lcd():
         try:
             if not got_first_data:
                 # wait
-                time.sleep(0.5)
+                time.sleep(1)
 
                 # loading screen
                 message = "."*loading
