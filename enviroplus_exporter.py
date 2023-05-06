@@ -132,28 +132,47 @@ def str_to_bool(value):
 
 def get_cpu_temperature():
     """Get the temperature from the Raspberry Pi CPU"""
-    with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-        temp = f.read()
-        temp = int(temp) / 1000.0
-        CPU_TEMPERATURE.labels(RBPI_SERIAL).set(temp)
-        return temp
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp = f.read()
+            temp = int(temp) / 1000.0
+            return temp
+    except IOError:
+        logging.error("Could not get CPU temperature.")
+        return None
+
+def collect_cpu_temperature(temperature):
+    """Collect the temperature from the Raspberry Pi CPU"""
+    if temperature:
+        CPU_TEMPERATURE.labels(RBPI_SERIAL).set(temperature)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
-    # Tuning factor for compensation. Decrease this number to adjust the
-    # temperature down, and increase to adjust up
-    raw_temp = bme280.get_temperature()
+    try:
+        raw_temp = bme280.get_temperature()
 
-    factor = 1.5
+        factor = 1.5
 
-    if factor_usr:
-        factor = factor_usr
+        if factor_usr:
+            factor = factor_usr
 
-    cpu_temp = get_cpu_temperature()
-    temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
+        cpu_temp = get_cpu_temperature()
+        temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
 
-    TEMPERATURE.labels(RBPI_SERIAL).set(temperature)   # Set to a given value
-    return temperature
+        return temperature
+    except IOError:
+        logging.error("Could not get temperature readings. Resetting i2c.")
+        reset_i2c()
+        return None
+
+def collect_temperature(temperature):
+    """Collect the temperature from the weather sensor"""
+    if temperature:
+        TEMPERATURE.labels(RBPI_SERIAL).set(temperature)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_pressure():
     """Get pressure from the weather sensor"""
@@ -164,6 +183,14 @@ def get_pressure():
     except IOError:
         logging.error("Could not get pressure readings. Resetting i2c.")
         reset_i2c()
+        return None
+
+def collect_pressure(pressure):
+    """Collect the pressure from the weather sensor"""
+    if pressure:
+        PRESSURE.labels(RBPI_SERIAL).set(pressure)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_humidity(humidity_compensation):
     """Get humidity from the weather sensor"""
@@ -174,6 +201,14 @@ def get_humidity(humidity_compensation):
     except IOError:
         logging.error("Could not get humidity readings. Resetting i2c.")
         reset_i2c()
+        return None
+
+def collect_humidity(humidity):
+    """Collect the humidity from the weather sensor"""
+    if humidity:
+        HUMIDITY.labels(RBPI_SERIAL).set(humidity)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_gas():
     """Get all gas readings"""
@@ -183,32 +218,36 @@ def get_gas():
 
     try:
         readings = gas.read_all()
-        OXIDISING.labels(RBPI_SERIAL).set(readings.oxidising)
-        OXIDISING_HIST.labels(RBPI_SERIAL).observe(readings.oxidising)
-
-        REDUCING.labels(RBPI_SERIAL).set(readings.reducing)
-        REDUCING_HIST.labels(RBPI_SERIAL).observe(readings.reducing)
-
-        NH3.labels(RBPI_SERIAL).set(readings.nh3)
-        NH3_HIST.labels(RBPI_SERIAL).observe(readings.nh3)
-
         ox_in_ppm = math.pow(10, math.log10(readings.oxidising/ox_r0) - 0.8129)
-        OXIDISING_PPM.labels(RBPI_SERIAL).set(ox_in_ppm)
-        OXIDISING_PPM_HIST.labels(RBPI_SERIAL).observe(ox_in_ppm)
-
         red_in_ppm = math.pow(10, -1.25 * math.log10(readings.reducing/red_r0) + 0.64)
-        REDUCING_PPM.labels(RBPI_SERIAL).set(red_in_ppm)
-        REDUCING_PPM_HIST.labels(RBPI_SERIAL).observe(red_in_ppm)
-
         nh3_in_ppm = math.pow(10, -1.8 * math.log10(readings.nh3/nh3_r0) - 0.163)
-        NH3_PPM.labels(RBPI_SERIAL).set(nh3_in_ppm)
-        NH3_PPM_HIST.labels(RBPI_SERIAL).observe(nh3_in_ppm)
-
-        return readings, ox_in_ppm, red_in_ppm, nh3_in_ppm
-
+        return readings.oxidising, readings.reducing, readings.nh3, ox_in_ppm, red_in_ppm, nh3_in_ppm
     except IOError:
         logging.error("Could not get gas readings. Resetting i2c.")
         reset_i2c()
+        return None, None, None, None, None, None
+
+def collect_gas(ox, red, nh3, ox_in_ppm, red_in_ppm, nh3_in_ppm):
+    if ox:
+        OXIDISING.labels(RBPI_SERIAL).set(ox)
+        OXIDISING_HIST.labels(RBPI_SERIAL).observe(ox)
+    if red:
+        REDUCING.labels(RBPI_SERIAL).set(red)
+        REDUCING_HIST.labels(RBPI_SERIAL).observe(red)
+    if nh3:
+        NH3.labels(RBPI_SERIAL).set(nh3)
+        NH3_HIST.labels(RBPI_SERIAL).observe(nh3)
+    if ox_in_ppm:
+        OXIDISING_PPM.labels(RBPI_SERIAL).set(ox_in_ppm)
+        OXIDISING_PPM_HIST.labels(RBPI_SERIAL).observe(ox_in_ppm)
+    if red_in_ppm:
+        REDUCING_PPM.labels(RBPI_SERIAL).set(red_in_ppm)
+        REDUCING_PPM_HIST.labels(RBPI_SERIAL).observe(red_in_ppm)
+    if nh3_in_ppm:
+        NH3_PPM.labels(RBPI_SERIAL).set(nh3_in_ppm)
+        NH3_PPM_HIST.labels(RBPI_SERIAL).observe(nh3_in_ppm)
+
+# ----------------------------------------------------------------------------------------------
 
 # To be implemented in the future
 # def get_noise_profile():
@@ -238,25 +277,42 @@ def get_light():
     except IOError:
         logging.error("Could not get lux and proximity readings. Resetting i2c.")
         reset_i2c()
+        return None, None
+
+def collect_light(lux, prox):
+    """Collect the light readings"""
+    if lux:
+        LUX.labels(RBPI_SERIAL).set(lux)
+    if prox:
+        PROXIMITY.labels(RBPI_SERIAL).set(prox)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_particulates():
     """Get the particulate matter readings"""
     try:
         pms_data = pms5003.read()
+        return pms_data.pm_ug_per_m3(1.0), pms_data.pm_ug_per_m3(2.5), pms_data.pm_ug_per_m3(10)
     except pmsReadTimeoutError:
         logging.warning("Timed out reading PMS5003.")
+        return None, None, None
     except (IOError, pmsSerialTimeoutError):
         logging.warning("Could not get particulate matter readings.")
-    else:
-        PM1.labels(RBPI_SERIAL).set(pms_data.pm_ug_per_m3(1.0))
-        PM25.labels(RBPI_SERIAL).set(pms_data.pm_ug_per_m3(2.5))
-        PM10.labels(RBPI_SERIAL).set(pms_data.pm_ug_per_m3(10))
+        return None, None, None
 
-        PM1_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(1.0))
-        PM25_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(2.5) - pms_data.pm_ug_per_m3(1.0))
-        PM10_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(10) - pms_data.pm_ug_per_m3(2.5))
+def collect_particulates(pm1, pm25, pm10):
+    """Collect the particulate matter readings"""
+    if pm1:
+        PM1.labels(RBPI_SERIAL).set(pm1)
+        PM1_HIST.labels(RBPI_SERIAL).observe(pm1)
+    if pm25:
+        PM25.labels(RBPI_SERIAL).set(pm25)
+        PM25_HIST.labels(RBPI_SERIAL).observe(pm25-pm1)
+    if pm10:
+        PM10.labels(RBPI_SERIAL).set(pm10)
+        PM10_HIST.labels(RBPI_SERIAL).observe(pm10-pm25)
 
-        return pms_data
+# ----------------------------------------------------------------------------------------------
 
 def collect_all_data():
     """Collects all the data currently set"""
@@ -288,7 +344,7 @@ def write_to_lcd():
     got_first_data = False
 
     while True:
-        # try:
+        try:
             if not got_first_data:
                 time.sleep(WRITE_TO_LCD_TIME)
                 sensor_data = collect_all_data()
@@ -361,8 +417,8 @@ def write_to_lcd():
 
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
-        # except Exception as exception:
-        #     logging.warning('Exception writing to LCD: {}'.format(exception))
+        except Exception as exception:
+            logging.warning('Exception writing to LCD: {}'.format(exception))
 
 # ----------------------------------------------------------------------------------------------
 
@@ -400,17 +456,19 @@ if __name__ == '__main__':
     logging.info("Listening on http://{}:{}".format(args.bind, args.port))
 
     while True:
-        get_temperature(args.temp)
-        get_cpu_temperature()
-        get_humidity(args.humid)
-        get_pressure()
-        get_light()
-        get_gas()
-        # get_noise_profile()
+        collect_temperature(get_temperature(args.temp))
+        collect_cpu_temperature(get_cpu_temperature())
+        collect_humidity(get_humidity(args.humid))
+        collect_pressure(get_pressure())
+        collect_light(get_light())
+        collect_gas(get_gas())
+        # collect_noise_profile(get_noise_profile())
 
         if not args.enviro:
-            get_gas()
-            get_particulates()
+            collect_light(get_light())
+            collect_gas(get_gas())
+
         if DEBUG:
             logging.info('Sensor data: {}'.format(collect_all_data()))
+
         time.sleep(polling_interval)
