@@ -343,11 +343,31 @@ def collect_all_data():
 def write_to_lcd():
     """Write dta to eniro lcd"""
     got_first_data = False
+    loading = 0
 
     while True:
         try:
             if not got_first_data:
+                # wait
                 time.sleep(WRITE_TO_LCD_TIME)
+
+                # loading screen
+                img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
+                draw = ImageDraw.Draw(img)
+                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                size_x, size_y = draw.textsize(message, font)
+
+                while size_x > WIDTH:
+                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
+                    size_x, size_y = draw.textsize(message, font)
+
+                draw.text((0,0), "Loading", font=font2, fill=(0, 255, 0))
+                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), "."*loading, font=font, fill=(0, 255, 0))
+                loading = (loading + 1) % 4
+                st7735.display(img)
+
+                # collect data
                 sensor_data = collect_all_data()
                 got_first_data = True
             else:
