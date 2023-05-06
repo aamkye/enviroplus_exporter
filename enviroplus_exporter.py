@@ -121,6 +121,9 @@ HUMIDITY = Gauge(PREFIX+'humidity','Relative humidity measured (%)', ['serial'])
 OXIDISING = Gauge(PREFIX+'oxidising','Mostly nitrogen dioxide but could include NO and Hydrogen (Ohms)', ['serial'])
 REDUCING = Gauge(PREFIX+'reducing', 'Mostly carbon monoxide but could include H2S, Ammonia, Ethanol, Hydrogen, Methane, Propane, Iso-butane (Ohms)', ['serial'])
 NH3 = Gauge(PREFIX+'NH3', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (Ohms)', ['serial'])
+OXIDISING_PPM = Gauge(PREFIX+'oxidising_ppm','Mostly nitrogen dioxide but could include NO and Hydrogen (ppm)', ['serial'])
+REDUCING_PPM = Gauge(PREFIX+'reducing_ppm', 'Mostly carbon monoxide but could include H2S, Ammonia, Ethanol, Hydrogen, Methane, Propane, Iso-butane (ppm)', ['serial'])
+NH3_PPM = Gauge(PREFIX+'NH3_PPM', 'mostly Ammonia but could also include Hydrogen, Ethanol, Propane, Iso-butane (ppm)', ['serial'])
 LUX = Gauge(PREFIX+'lux', 'current ambient light level (lux)', ['serial'])
 PROXIMITY = Gauge(PREFIX+'proximity', 'proximity, with larger numbers being closer proximity and vice versa', ['serial'])
 PM1 = Gauge(PREFIX+'PM1', 'Particulate Matter of diameter less than 1 micron. Measured in micrograms per cubic metre (ug/m3)', ['serial'])
@@ -133,6 +136,10 @@ BATTERY_PERCENTAGE = Gauge(PREFIX+'battery_percentage','Percentage of the batter
 OXIDISING_HIST = Histogram(PREFIX+'oxidising_measurements', 'Histogram of oxidising measurements', ['serial'], buckets=(0, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 100000))
 REDUCING_HIST = Histogram(PREFIX+'reducing_measurements', 'Histogram of reducing measurements', ['serial'], buckets=(0, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000))
 NH3_HIST = Histogram(PREFIX+'nh3_measurements', 'Histogram of nh3 measurements', ['serial'], buckets=(0, 10000, 110000, 210000, 310000, 410000, 510000, 610000, 710000, 810000, 910000, 1010000, 1110000, 1210000, 1310000, 1410000, 1510000, 1610000, 1710000, 1810000, 1910000, 2000000))
+
+OXIDISING_PPM_HIST = Histogram(PREFIX+'oxidising_ppm_measurements', 'Histogram of oxidising ppm measurements', ['serial'], buckets=(0, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 100000))
+REDUCING_PPM_HIST = Histogram(PREFIX+'reducing_ppm_measurements', 'Histogram of reducing ppm measurements', ['serial'], buckets=(0, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000))
+NH3_PPM_HIST = Histogram(PREFIX+'nh3_ppm_measurements', 'Histogram of nh3 ppm measurements', ['serial'], buckets=(0, 10000, 110000, 210000, 310000, 410000, 510000, 610000, 710000, 810000, 910000, 1010000, 1110000, 1210000, 1310000, 1410000, 1510000, 1610000, 1710000, 1810000, 1910000, 2000000))
 
 PM1_HIST = Histogram(PREFIX+'pm1_measurements', 'Histogram of Particulate Matter of diameter less than 1 micron measurements', ['serial'], buckets=(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100))
 PM25_HIST = Histogram(PREFIX+'pm25_measurements', 'Histogram of Particulate Matter of diameter less than 2.5 micron measurements', ['serial'], buckets=(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100))
@@ -214,6 +221,11 @@ def get_humidity(humidity_compensation):
 
 def get_gas():
     """Get all gas readings"""
+    red_r0 = 200000
+    ox_r0 = 20000
+    nh3_r0 = 750000
+
+
     try:
         readings = gas.read_all()
         OXIDISING.labels(RBPI_SERIAL).set(readings.oxidising)
@@ -224,6 +236,19 @@ def get_gas():
 
         NH3.labels(RBPI_SERIAL).set(readings.nh3)
         NH3_HIST.labels(RBPI_SERIAL).observe(readings.nh3)
+
+        ox_in_ppm = math.pow(10, math.log10(readings.oxidising/ox_r0) - 0.8129)
+        OXIDISING_PPM.labels(RBPI_SERIAL).set(ox_in_ppm)
+        OXIDISING_PPM_HIST.labels(RBPI_SERIAL).observe(ox_in_ppm)
+
+        red_in_ppm = math.pow(10, -1.25 * math.log10(readings.reducing/red_r0) + 0.64)
+        REDUCING_PPM.labels(RBPI_SERIAL).set(red_in_ppm)
+        REDUCING_PPM_HIST.labels(RBPI_SERIAL).observe(red_in_ppm)
+
+        nh3_in_ppm = math.pow(10, -1.8 * math.log10(readings.nh3/nh3_r0) - 0.163)
+        NH3_PPM.labels(RBPI_SERIAL).set(nh3_in_ppm)
+        NH3_PPM_HIST.labels(RBPI_SERIAL).observe(nh3_in_ppm)
+
     except IOError:
         logging.error("Could not get gas readings. Resetting i2c.")
         reset_i2c()
@@ -293,6 +318,9 @@ def collect_all_data():
     sensor_data['oxidising'] = OXIDISING.collect()[0].samples[0].value
     sensor_data['reducing'] = REDUCING.collect()[0].samples[0].value
     sensor_data['nh3'] = NH3.collect()[0].samples[0].value
+    sensor_data['oxidising_ppm'] = OXIDISING_PPM.collect()[0].samples[0].value
+    sensor_data['reducing_ppm'] = REDUCING_PPM.collect()[0].samples[0].value
+    sensor_data['nh3_ppm'] = NH3_PPM.collect()[0].samples[0].value
     sensor_data['lux'] = LUX.collect()[0].samples[0].value
     sensor_data['proximity'] = PROXIMITY.collect()[0].samples[0].value
     # sensor_data['pm1'] = PM1.collect()[0].samples[0].value
@@ -327,9 +355,9 @@ def write_to_lcd():
                     "pressure",
                     "humidity",
                     "lux",
-                    "oxidising",
-                    "reducing",
-                    "nh3",]
+                    "oxidising_ppm",
+                    "reducing_ppm",
+                    "nh3_ppm",]
 
                 units = [
                     "°C",
@@ -337,9 +365,9 @@ def write_to_lcd():
                     "hPa",
                     "%",
                     "lx",
-                    "kO",
-                    "kO",
-                    "kO",]
+                    "ppm",
+                    "ppm",
+                    "ppm",]
 
                 limits = [
                     [4, 18, 28, 35], # Temperature
@@ -348,8 +376,8 @@ def write_to_lcd():
                     [20, 30, 60, 70], # Humidity
                     [0, 0, 30000, 100000], # Lux
                     [-1, -1, 30000, 100000], # Oxidised
-                    [-1, -1, 40, 50], # Reduced
-                    [-1, -1, 450, 550],] # NH3
+                    [-1, -1, 30000, 100000], # Reduced
+                    [-1, -1, 30000, 100000],] # NH3
 
                 # RGB palette for values on the combined screen
                 palette = [
