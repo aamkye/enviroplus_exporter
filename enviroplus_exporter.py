@@ -141,13 +141,13 @@ variables = {
         "limits": [-1, -1, 1000, 2000],
     },
     "oxidising_ppm": {
-        "name": "Oxidising (NO₂, O₃ , CL₂)",
+        "name": "NO₂, O₃ , CL₂",
         "variable": 'oxidising_ppm',
         "unit": "ppm",
         "limits": [-1, -1, 1600, 2600],
     },
     "reducing_ppm": {
-        "name": "CO, H₂, C₂H₆O)",
+        "name": "CO, H₂, C₂H₆O",
         "variable": 'reducing_ppm',
         "unit": "ppm",
         "limits": [-1, -1, 1600, 2600],
