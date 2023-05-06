@@ -421,7 +421,7 @@ def write_to_lcd():
                 message = "."*loading
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 16)
+                fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 18)
                 fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                 _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
@@ -445,7 +445,7 @@ def write_to_lcd():
 
                     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                     draw = ImageDraw.Draw(img)
-                    fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 16)
+                    fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 18)
                     fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                     _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
