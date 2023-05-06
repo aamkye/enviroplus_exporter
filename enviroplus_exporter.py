@@ -344,8 +344,6 @@ def write_to_lcd():
                 sensor_data = collect_all_data()
                 got_first_data = True
             else:
-                sensor_data = collect_all_data()
-
                 variables = [
                     "temperature",
                     "cpu_temperature",
@@ -368,13 +366,13 @@ def write_to_lcd():
 
                 limits = [
                     [4, 18, 28, 35], # Temperature
-                    [-20, 0, 40, 80], # CPU Temperature
-                    [250, 650, 1013.25, 1015], # Pressure
+                    [-20, 0, 55, 95], # CPU Temperature
+                    [250, 650, 1013.25, 1025], # Pressure
                     [20, 30, 60, 70], # Humidity
                     [0, 0, 30000, 100000], # Lux
-                    [-1, -1, 30000, 100000], # Oxidised
-                    [-1, -1, 30000, 100000], # Reduced
-                    [-1, -1, 30000, 100000],] # NH3
+                    [300, 1100, 1600, 2600], # Oxidised
+                    [300, 1100, 1600, 2600], # Reduced
+                    [-1, 16, 64, 160],] # NH3
 
                 # RGB palette for values on the combined screen
                 palette = [
@@ -385,6 +383,7 @@ def write_to_lcd():
                     (255, 0, 0),]          # Dangerously High
 
                 for i in range(len(variables)):
+                    sensor_data = collect_all_data()
                     variable = variables[i]
                     data_value = sensor_data[variable]
                     unit = units[i]
