@@ -211,6 +211,7 @@ def collect_cpu_temperature(temperature):
 def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
     try:
+        bme280.update_sensor()
         raw_temp = bme280.get_temperature()
         factor = 1.8
         if factor_usr:
