@@ -180,6 +180,7 @@ def get_cpu_temperature():
         temp = f.read()
         temp = int(temp) / 1000.0
         CPU_TEMPERATURE.labels(RBPI_SERIAL).set(temp)
+        return temp
 
 def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
