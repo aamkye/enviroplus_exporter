@@ -444,7 +444,7 @@ def write_to_lcd():
                 sensor_data = collect_all_data()
                 got_first_data = True
             else:
-                while not time.time() % 10 == 0:
+                while not math.floor(time.time()) % 10 == 0:
                     time.sleep(1)
                 for _, v in variables.items():
                     sensor_data = collect_all_data()
