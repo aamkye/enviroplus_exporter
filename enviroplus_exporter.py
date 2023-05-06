@@ -357,11 +357,11 @@ def write_to_lcd():
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                 font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                size_x, size_y = draw.textsize(message, font)
+                _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
 
                 while size_x > WIDTH:
                     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
-                    size_x, size_y = draw.textsize(message, font)
+                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
 
                 draw.text((0,0), "Loading", font=font2, fill=(0, 255, 0))
                 draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(0, 255, 0))
@@ -422,11 +422,11 @@ def write_to_lcd():
                     draw = ImageDraw.Draw(img)
                     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                     font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                    size_x, size_y = draw.textsize(message, font)
+                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
 
                     while size_x > WIDTH:
                         font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
-                        size_x, size_y = draw.textsize(message, font)
+                        _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
 
                     lim = limits[i]
                     rgb = palette[0]
