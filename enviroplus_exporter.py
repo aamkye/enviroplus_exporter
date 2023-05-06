@@ -365,7 +365,7 @@ def write_to_lcd():
 
                 draw.text((0,0), "Loading", font=font2, fill=(0, 255, 0))
                 draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(0, 255, 0))
-                loading = (loading % 4) + 1
+                loading = (loading + 1) % 4
                 st7735.display(img)
 
                 # collect data
