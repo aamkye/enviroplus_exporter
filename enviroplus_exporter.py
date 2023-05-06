@@ -141,19 +141,19 @@ variables = {
         "limits": [-1, -1, 1000, 2000],
     },
     "oxidising_ppm": {
-        "name": "Oxidising (nitrogen dioxide)",
+        "name": "Oxidising (NO₂, O₃ , CL₂)",
         "variable": 'oxidising_ppm',
         "unit": "ppm",
         "limits": [-1, -1, 1600, 2600],
     },
     "reducing_ppm": {
-        "name": "Reducing (carbon monoxide)",
+        "name": "CO, H₂, C₂H₆O)",
         "variable": 'reducing_ppm',
         "unit": "ppm",
         "limits": [-1, -1, 1600, 2600],
     },
     "nh3_ppm": {
-        "name": "NH3 (ammonia)",
+        "name": "NH₃",
         "variable": 'nh3_ppm',
         "unit": "ppm",
         "limits": [-1, -1, 1600, 2600],
@@ -421,7 +421,7 @@ def write_to_lcd():
                 message = "."*loading
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 16)
                 fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                 _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
@@ -445,7 +445,7 @@ def write_to_lcd():
 
                     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                     draw = ImageDraw.Draw(img)
-                    fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                    fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 16)
                     fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
                     _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
@@ -464,36 +464,6 @@ def write_to_lcd():
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
 
-
-                # for i in range(len(variables)):
-                #     sensor_data = collect_all_data()
-                #     variable = variables[i]
-                #     data_value = sensor_data[variable]
-                #     unit = units[i]
-                #     message = "{:.1f}{}".format(data_value, unit)
-                #     logging.debug('Writing to LCD: {}'.format(message))
-
-                #     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
-                #     draw = ImageDraw.Draw(img)
-                #     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                #     font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                #     _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
-
-                #     while size_x > WIDTH:
-                #         font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
-                #         _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
-
-                #     lim = limits[i]
-                #     rgb = palette[0]
-                #     for j in range(len(lim)):
-                #         if data_value > lim[j]:
-                #             rgb = palette[j + 1]
-
-                #     draw.text((0,0), variable, font=font2, fill=(255, 255, 255))
-                #     draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=rgb)
-
-                #     st7735.display(img)
-                #     time.sleep(WRITE_TO_LCD_TIME)
         except Exception as exception:
             logging.warning('Exception writing to LCD: {}'.format(exception))
 
