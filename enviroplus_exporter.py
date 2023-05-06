@@ -188,7 +188,7 @@ def get_temperature(factor_usr):
     # temperature down, and increase to adjust up
     raw_temp = bme280.get_temperature()
 
-    factor = 2.25
+    factor = 2.4
 
     if factor_usr:
         factor = factor_usr
