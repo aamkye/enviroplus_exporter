@@ -180,27 +180,17 @@ def get_temperature(factor_usr):
     # temperature down, and increase to adjust up
     raw_temp = bme280.get_temperature()
 
-    factor = 1.25
+    factor = 2.25
 
     if factor_usr:
         factor = factor_usr
-        # factor = factor_usr
-        cpu_temps = [get_cpu_temperature()] * 5
-        cpu_temp = get_cpu_temperature()
-        # Smooth out with some averaging to decrease jitter
-        cpu_temps = cpu_temps[1:] + [cpu_temp]
-        avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
-        temperature = raw_temp - ((avg_cpu_temp - raw_temp) / factor)
-    else:
-        temperature = raw_temp
 
-
-    # cpu_temps = [get_cpu_temperature()] * 5
-    # cpu_temp = get_cpu_temperature()
-    # # Smooth out with some averaging to decrease jitter
-    # cpu_temps = cpu_temps[1:] + [cpu_temp]
-    # avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
-    # temperature = raw_temp - ((avg_cpu_temp - raw_temp) / factor)
+    cpu_temps = [get_cpu_temperature()] * 5
+    cpu_temp = get_cpu_temperature()
+    # Smooth out with some averaging to decrease jitter
+    cpu_temps = cpu_temps[1:] + [cpu_temp]
+    avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
+    temperature = raw_temp - ((avg_cpu_temp - raw_temp) / factor)
 
     TEMPERATURE.labels(RBPI_SERIAL).set(temperature)   # Set to a given value
 
