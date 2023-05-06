@@ -369,22 +369,27 @@ def write_to_lcd():
                     "hPa",
                     "%",
             ]
+
             for i in range(len(variables)):
                 variable = variables[i]
                 data_value = sensor_data[variable]
                 unit = units[i]
                 message = "{:.1f}{}".format(data_value, unit)
                 logging.debug('Writing to LCD: {}'.format(message))
+
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 48)
+                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 8)
                 size_x, size_y = draw.textsize(message, font)
 
                 while size_x > WIDTH:
                     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
                     size_x, size_y = draw.textsize(message, font)
 
-                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT/2)-(size_y/2))), message, font=font, fill=(255, 255, 0))
+                draw.text((0,0), variable, font=font2, fill=(0, 255, 0))
+                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT/2)-(size_y))), message, font=font, fill=(255, 255, 0))
+
                 st7735.display(img)
                 time.sleep(WRITE_TO_LCD_TIME)
         except Exception as exception:
