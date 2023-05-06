@@ -11,6 +11,7 @@ import serial
 from threading import Thread
 import json
 import uuid
+import math
 
 import board
 from prometheus_client import start_http_server, Gauge, Histogram
@@ -378,10 +379,12 @@ def write_to_lcd():
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 48)
                 size_x, size_y = draw.textsize(message, font)
+
                 while size_x > WIDTH:
                     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
                     size_x, size_y = draw.textsize(message, font)
-                draw.text((0, 0), message, font=font, fill=(255, 255, 255))
+
+                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT/2)-(size_y/2))), message, font=font, fill=(255, 255, 0))
                 st7735.display(img)
                 time.sleep(WRITE_TO_LCD_TIME)
         except Exception as exception:
