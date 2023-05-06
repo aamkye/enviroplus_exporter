@@ -319,10 +319,10 @@ def write_to_lcd():
                     [-20, 0, 55, 95], # CPU Temperature
                     [250, 650, 1013.25, 1025], # Pressure
                     [20, 30, 60, 70], # Humidity
-                    [0, 0, 30000, 100000], # Lux
-                    [300, 1100, 1600, 2600], # Oxidised
-                    [300, 1100, 1600, 2600], # Reduced
-                    [-1, 16, 64, 160],] # NH3
+                    [-1, 1000, 30000, 100000], # Lux
+                    [-1, 1100, 1600, 2600], # Oxidised
+                    [-1, 1100, 1600, 2600], # Reduced
+                    [-1, 200, 400, 600],] # NH3
 
                 # RGB palette for values on the combined screen
                 palette = [
