@@ -251,13 +251,13 @@ def get_gas():
     try:
         readings = gas.read_all()
         OXIDISING.labels(RBPI_SERIAL).set(readings.oxidising)
-        OXIDISING_HIST.observe(readings.oxidising)
+        OXIDISING_HIST.labels(RBPI_SERIAL).observe(readings.oxidising)
 
         REDUCING.labels(RBPI_SERIAL).set(readings.reducing)
-        REDUCING_HIST.observe(readings.reducing)
+        REDUCING_HIST.labels(RBPI_SERIAL).observe(readings.reducing)
 
         NH3.labels(RBPI_SERIAL).set(readings.nh3)
-        NH3_HIST.observe(readings.nh3)
+        NH3_HIST.labels(RBPI_SERIAL).observe(readings.nh3)
     except IOError:
         logging.error("Could not get gas readings. Resetting i2c.")
         reset_i2c()
@@ -302,9 +302,9 @@ def get_particulates():
         PM25.labels(RBPI_SERIAL).set(pms_data.pm_ug_per_m3(2.5))
         PM10.labels(RBPI_SERIAL).set(pms_data.pm_ug_per_m3(10))
 
-        PM1_HIST.observe(pms_data.pm_ug_per_m3(1.0))
-        PM25_HIST.observe(pms_data.pm_ug_per_m3(2.5) - pms_data.pm_ug_per_m3(1.0))
-        PM10_HIST.observe(pms_data.pm_ug_per_m3(10) - pms_data.pm_ug_per_m3(2.5))
+        PM1_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(1.0))
+        PM25_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(2.5) - pms_data.pm_ug_per_m3(1.0))
+        PM10_HIST.labels(RBPI_SERIAL).observe(pms_data.pm_ug_per_m3(10) - pms_data.pm_ug_per_m3(2.5))
 
 def get_battery():
     """Get the battery voltage and percentage left"""
