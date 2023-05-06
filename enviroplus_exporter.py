@@ -349,9 +349,10 @@ def write_to_lcd():
         try:
             if not got_first_data:
                 # wait
-                time.sleep(1)
+                time.sleep(0.2)
 
                 # loading screen
+                message = "."*loading
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
@@ -363,7 +364,6 @@ def write_to_lcd():
                     size_x, size_y = draw.textsize(message, font)
 
                 draw.text((0,0), "Loading", font=font2, fill=(0, 255, 0))
-                message = "*"*loading
                 draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(0, 255, 0))
                 loading = (loading + 1) % 4
                 st7735.display(img)
