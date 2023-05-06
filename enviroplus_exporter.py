@@ -109,6 +109,68 @@ WRITE_TO_LCD_TIME = int(os.getenv('WRITE_TO_LCD_TIME', '3'))
 
 # ----------------------------------------------------------------------------------------------
 
+variables = {
+    "temperature": {
+        "name": "Env Temperature",
+        "variable": 'temperature',
+        "unit": "°C",
+        "limits": [4, 18, 28, 35],
+    },
+    "cpu_temperature": {
+        "name": "CPU Temperature",
+        "variable": 'cpu_temperature',
+        "unit": "°C",
+        "limits": [-20, 0, 55, 95],
+    },
+    "pressure": {
+        "name": "Pressure",
+        "variable": 'pressure',
+        "unit": "hPa",
+        "limits": [250, 650, 1013.25, 1025],
+    },
+    "humidity": {
+        "name": "Humidity",
+        "variable": 'humidity',
+        "unit": "%",
+        "limits": [20, 30, 60, 70],
+    },
+    "lux": {
+        "name": "Lux",
+        "variable": 'lux',
+        "unit": "lx",
+        "limits": [-1, -1, 1000, 2000],
+    },
+    "oxidising_ppm": {
+        "name": "Oxidising (nitrogen dioxide)",
+        "variable": 'oxidising_ppm',
+        "unit": "ppm",
+        "limits": [-1, -1, 1600, 2600],
+    },
+    "reducing_ppm": {
+        "name": "Reducing (carbon monoxide)",
+        "variable": 'reducing_ppm',
+        "unit": "ppm",
+        "limits": [-1, -1, 1600, 2600],
+    },
+    "nh3_ppm": {
+        "name": "NH3 (ammonia)",
+        "variable": 'nh3_ppm',
+        "unit": "ppm",
+        "limits": [-1, -1, 1600, 2600],
+    },
+}
+
+# RGB palette for values on the combined screen
+palette = [
+    (0, 0, 255),    # Dangerously Low
+    (0, 255, 255),  # Low
+    (0, 255, 0),    # Normal
+    (255, 255, 0),  # High
+    (255, 0, 0),    # Dangerously High
+]
+
+# ----------------------------------------------------------------------------------------------
+
 # Sometimes the sensors can't be read. Resetting the i2c
 def reset_i2c():
     subprocess.run(['i2cdetect', '-y', '1'])
@@ -152,15 +214,11 @@ def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
     try:
         raw_temp = bme280.get_temperature()
-
         factor = 1.5
-
         if factor_usr:
             factor = factor_usr
-
         cpu_temp = get_cpu_temperature()
         temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
-
         return temperature
     except IOError:
         logging.error("Could not get temperature readings. Resetting i2c.")
@@ -259,13 +317,21 @@ def collect_gas(data):
 #         mid = noise.get_amplitude_at_frequency_range(200, 2000)
 #         high = noise.get_amplitude_at_frequency_range(2000, 8000)
 #         amp = noise.get_amplitude_at_frequency_range(20, 8000)
-#         NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
-#         NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
-#         NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
-#         NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
+#         return low, mid, high, amp
 #     except IOError:
 #         logging.error("Could not get noise profile. Resetting i2c.")
 #         reset_i2c()
+#         return None, None, None, None
+
+# def collect_noise_profile(data):
+#     """Collect the noise profile"""
+#     low, mid, high, amp = data
+#     NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
+#     NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
+#     NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
+#     NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
+
+# ----------------------------------------------------------------------------------------------
 
 def get_light():
     """Get all light readings"""
@@ -355,16 +421,16 @@ def write_to_lcd():
                 message = "."*loading
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+                fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
                 while size_x > WIDTH:
-                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
-                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+                    fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", fontBig.size - 2)
+                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
-                draw.text((0,0), "Loading", font=font2, fill=(0, 255, 0))
-                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(0, 255, 0))
+                draw.text((0,0), "Loading", font=fontSmall, fill=(0, 255, 0))
+                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=fontBig, fill=(0, 255, 0))
                 loading = (loading + 1) % 4
                 st7735.display(img)
 
@@ -372,73 +438,62 @@ def write_to_lcd():
                 sensor_data = collect_all_data()
                 got_first_data = True
             else:
-                variables = [
-                    "temperature",
-                    "cpu_temperature",
-                    "pressure",
-                    "humidity",
-                    "lux",
-                    "oxidising_ppm",
-                    "reducing_ppm",
-                    "nh3_ppm",]
-
-                units = [
-                    "°C",
-                    "°C",
-                    "hPa",
-                    "%",
-                    "lx",
-                    "ppm",
-                    "ppm",
-                    "ppm",]
-
-                limits = [
-                    [4, 18, 28, 35], # Temperature
-                    [-20, 0, 55, 95], # CPU Temperature
-                    [250, 650, 1013.25, 1025], # Pressure
-                    [20, 30, 60, 70], # Humidity
-                    [-1, -1, 1000, 2000], # Lux
-                    [-1, -1, 1600, 2600], # Oxidised
-                    [-1, -1, 1600, 2600], # Reduced
-                    [-1, -1, 400, 600],] # NH3
-
-                # RGB palette for values on the combined screen
-                palette = [
-                    (0, 0, 255),           # Dangerously Low
-                    (0, 255, 255),         # Low
-                    (0, 255, 0),           # Normal
-                    (255, 255, 0),         # High
-                    (255, 0, 0),]          # Dangerously High
-
-                for i in range(len(variables)):
+                for k, v in variables:
                     sensor_data = collect_all_data()
-                    variable = variables[i]
-                    data_value = sensor_data[variable]
-                    unit = units[i]
-                    message = "{:.1f}{}".format(data_value, unit)
+                    message = "{:.1f}{}".format(sensor_data[v.variable], v.unit)
                     logging.debug('Writing to LCD: {}'.format(message))
 
                     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                     draw = ImageDraw.Draw(img)
-                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                    font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+                    fontSmall = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                    fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                    _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
                     while size_x > WIDTH:
-                        font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
-                        _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+                        fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", fontBig.size - 2)
+                        _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
-                    lim = limits[i]
+                    lim = v.limits
                     rgb = palette[0]
                     for j in range(len(lim)):
-                        if data_value > lim[j]:
+                        if sensor_data[v.variable] > lim[j]:
                             rgb = palette[j + 1]
 
-                    draw.text((0,0), variable, font=font2, fill=(255, 255, 255))
-                    draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=rgb)
-
+                    draw.text((0,0), v.name, font=fontSmall, fill=(0, 255, 0))
+                    draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=fontBig, fill=rgb)
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
+
+
+                # for i in range(len(variables)):
+                #     sensor_data = collect_all_data()
+                #     variable = variables[i]
+                #     data_value = sensor_data[variable]
+                #     unit = units[i]
+                #     message = "{:.1f}{}".format(data_value, unit)
+                #     logging.debug('Writing to LCD: {}'.format(message))
+
+                #     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
+                #     draw = ImageDraw.Draw(img)
+                #     font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                #     font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
+                #     _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+
+                #     while size_x > WIDTH:
+                #         font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
+                #         _, _, size_x, size_y = draw.textbbox((0, 0), message, font=font)
+
+                #     lim = limits[i]
+                #     rgb = palette[0]
+                #     for j in range(len(lim)):
+                #         if data_value > lim[j]:
+                #             rgb = palette[j + 1]
+
+                #     draw.text((0,0), variable, font=font2, fill=(255, 255, 255))
+                #     draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=rgb)
+
+                #     st7735.display(img)
+                #     time.sleep(WRITE_TO_LCD_TIME)
         except Exception as exception:
             logging.warning('Exception writing to LCD: {}'.format(exception))
 
