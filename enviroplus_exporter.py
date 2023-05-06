@@ -438,7 +438,7 @@ def write_to_lcd():
                 sensor_data = collect_all_data()
                 got_first_data = True
             else:
-                for k, v in variables:
+                for v in variables:
                     sensor_data = collect_all_data()
                     message = "{:.1f}{}".format(sensor_data[v.variable], v.unit)
                     logging.debug('Writing to LCD: {}'.format(message))
