@@ -192,12 +192,8 @@ def get_temperature(factor_usr):
     if factor_usr:
         factor = factor_usr
 
-    cpu_temps = [get_cpu_temperature()] * 5
     cpu_temp = get_cpu_temperature()
-    # Smooth out with some averaging to decrease jitter
-    cpu_temps = cpu_temps[1:] + [cpu_temp]
-    avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
-    temperature = raw_temp - ((avg_cpu_temp - raw_temp) / factor)
+    temperature = raw_temp - ((cpu_temp - raw_temp) / factor)
 
     TEMPERATURE.labels(RBPI_SERIAL).set(temperature)   # Set to a given value
 
