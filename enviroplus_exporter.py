@@ -348,7 +348,6 @@ def collect_all_data():
     sensor_data['noise_profile_high_freq'] = NOISE_PROFILE_HIGH_FREQ.collect()[0].samples[0].value
     sensor_data['noise_profile_amp'] = NOISE_PROFILE_AMP.collect()[0].samples[0].value
 
-    print(TEMPERATURE.collect())
     return sensor_data
 
 def write_to_lcd():
@@ -377,10 +376,10 @@ def write_to_lcd():
                 logging.debug('Writing to LCD: {}'.format(message))
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48)
+                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 48)
                 size_x, size_y = draw.textsize(message, font)
                 while size_x > WIDTH:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font.size - 2)
+                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
                     size_x, size_y = draw.textsize(message, font)
                 draw.text((0, 0), message, font=font, fill=(255, 255, 255))
                 st7735.display(img)
