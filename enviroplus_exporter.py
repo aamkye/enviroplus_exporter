@@ -380,7 +380,7 @@ def write_to_lcd():
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 8)
+                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 10)
                 size_x, size_y = draw.textsize(message, font)
 
                 while size_x > WIDTH:
@@ -388,7 +388,7 @@ def write_to_lcd():
                     size_x, size_y = draw.textsize(message, font)
 
                 draw.text((0,0), variable, font=font2, fill=(0, 255, 0))
-                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT/2)-(size_y))), message, font=font, fill=(255, 255, 0))
+                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(255, 255, 0))
 
                 st7735.display(img)
                 time.sleep(WRITE_TO_LCD_TIME)
