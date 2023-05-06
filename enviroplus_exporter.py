@@ -344,50 +344,55 @@ def collect_all_data():
 
 def write_to_lcd():
     """Write dta to eniro lcd"""
-    time.sleep(WRITE_TO_LCD_TIME)
+    got_first_data = False
 
     while True:
-        sensor_data = collect_all_data()
-
         try:
-            variables = [
-                "temperature",
-                "cpu_temperature",
-                "pressure",
-                "humidity",
-                "lux",
-            ]
+            if not got_first_data:
+                time.sleep(WRITE_TO_LCD_TIME)
+                sensor_data = collect_all_data()
+                got_first_data = True
+            else:
+                sensor_data = collect_all_data()
 
-            units = [
-                "°C",
-                "°C",
-                "hPa",
-                "%",
-                "lx",
-            ]
+                variables = [
+                    "temperature",
+                    "cpu_temperature",
+                    "pressure",
+                    "humidity",
+                    "lux",
+                ]
 
-            for i in range(len(variables)):
-                variable = variables[i]
-                data_value = sensor_data[variable]
-                unit = units[i]
-                message = "{:.1f}{}".format(data_value, unit)
-                logging.debug('Writing to LCD: {}'.format(message))
+                units = [
+                    "°C",
+                    "°C",
+                    "hPa",
+                    "%",
+                    "lx",
+                ]
 
-                img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
-                draw = ImageDraw.Draw(img)
-                font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
-                size_x, size_y = draw.textsize(message, font)
+                for i in range(len(variables)):
+                    variable = variables[i]
+                    data_value = sensor_data[variable]
+                    unit = units[i]
+                    message = "{:.1f}{}".format(data_value, unit)
+                    logging.debug('Writing to LCD: {}'.format(message))
 
-                while size_x > WIDTH:
-                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
+                    img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
+                    draw = ImageDraw.Draw(img)
+                    font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
+                    font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 14)
                     size_x, size_y = draw.textsize(message, font)
 
-                draw.text((0,0), variable, font=font2, fill=(0, 255, 0))
-                draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(255, 255, 0))
+                    while size_x > WIDTH:
+                        font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
+                        size_x, size_y = draw.textsize(message, font)
 
-                st7735.display(img)
-                time.sleep(WRITE_TO_LCD_TIME)
+                    draw.text((0,0), variable, font=font2, fill=(0, 255, 0))
+                    draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(255, 255, 0))
+
+                    st7735.display(img)
+                    time.sleep(WRITE_TO_LCD_TIME)
         except Exception as exception:
             logging.warning('Exception writing to LCD: {}'.format(exception))
 
