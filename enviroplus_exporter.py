@@ -65,15 +65,6 @@ bus = SMBus(1)
 bme280 = BME280(i2c_dev=bus)
 noise = Noise()
 
-st7735 = ST7735.ST7735(
-    port=0,
-    cs=1,
-    dc=9,
-    backlight=12,
-    rotation=270,
-    spi_speed_hz=10000000
-)
-
 # Initialize display
 st7735 = ST7735.ST7735(
     port=0,
@@ -107,23 +98,8 @@ draw = ImageDraw.Draw(img)
 # with NO WARRANTY. The authors of this example code claim
 # NO RESPONSIBILITY if reliance on the following values or this
 # code in general leads to ANY DAMAGES or DEATH.
-limits = [[4, 18, 28, 35],
-          [250, 650, 1013.25, 1015],
-          [20, 30, 60, 70],
-          [-1, -1, 30000, 100000],
-          [-1, -1, 40, 50],
-          [-1, -1, 450, 550],
-          [-1, -1, 200, 300],
-          [-1, -1, 50, 100],
-          [-1, -1, 50, 100],
-          [-1, -1, 50, 100]]
 
-# RGB palette for values on the combined screen
-palette = [(0, 0, 255),           # Dangerously Low
-           (0, 255, 255),         # Low
-           (0, 255, 0),           # Normal
-           (255, 255, 0),         # High
-           (255, 0, 0)]           # Dangerously High
+
 
 try:
     pms5003 = PMS5003()
@@ -168,7 +144,7 @@ NOISE_PROFILE_HIGH_FREQ = Gauge(PREFIX+'noise_profile_high_freq', 'Noise profile
 NOISE_PROFILE_AMP = Gauge(PREFIX+'noise_profile_amp', 'Noise profile of amplitude (db)', ['serial'])
 
 # delay between each write to lcd
-WRITE_TO_LCD_TIME = int(os.getenv('WRITE_TO_LCD_TIME', '2'))
+WRITE_TO_LCD_TIME = int(os.getenv('WRITE_TO_LCD_TIME', '3'))
 
 # Sometimes the sensors can't be read. Resetting the i2c
 def reset_i2c():
@@ -361,7 +337,9 @@ def write_to_lcd():
                     "pressure",
                     "humidity",
                     "lux",
-                ]
+                    "oxidising",
+                    "reducing",
+                    "nh3",]
 
                 units = [
                     "°C",
@@ -369,7 +347,27 @@ def write_to_lcd():
                     "hPa",
                     "%",
                     "lx",
-                ]
+                    "kO",
+                    "kO",
+                    "kO",]
+
+                limits = [
+                    [4, 18, 28, 35], # Temperature
+                    [-20, 0, 40, 80], # CPU Temperature
+                    [250, 650, 1013.25, 1015], # Pressure
+                    [20, 30, 60, 70], # Humidity
+                    [0, 0, 30000, 100000], # Lux
+                    [-1, -1, 30000, 100000], # Oxidised
+                    [-1, -1, 40, 50], # Reduced
+                    [-1, -1, 450, 550],] # NH3
+
+                # RGB palette for values on the combined screen
+                palette = [
+                    (0, 0, 255),           # Dangerously Low
+                    (0, 255, 255),         # Low
+                    (0, 255, 0),           # Normal
+                    (255, 255, 0),         # High
+                    (255, 0, 0),]          # Dangerously High
 
                 for i in range(len(variables)):
                     variable = variables[i]
@@ -388,8 +386,14 @@ def write_to_lcd():
                         font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", font.size - 2)
                         size_x, size_y = draw.textsize(message, font)
 
-                    draw.text((0,0), variable, font=font2, fill=(0, 255, 0))
-                    draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=(255, 255, 0))
+                    lim = limits[i]
+                    rgb = palette[0]
+                    for j in range(len(lim)):
+                        if data_value > lim[j]:
+                            rgb = palette[j + 1]
+
+                    draw.text((0,0), variable, font=font2, fill=(255, 255, 255))
+                    draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=font, fill=rgb)
 
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
