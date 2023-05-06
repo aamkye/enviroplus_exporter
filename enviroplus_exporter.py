@@ -212,7 +212,7 @@ def get_temperature(factor_usr):
     """Get temperature from the weather sensor"""
     try:
         raw_temp = bme280.get_temperature()
-        factor = 1.5
+        factor = 1.8
         if factor_usr:
             factor = factor_usr
         cpu_temp = get_cpu_temperature()
@@ -324,10 +324,14 @@ def collect_gas(data):
 # def collect_noise_profile(data):
 #     """Collect the noise profile"""
 #     low, mid, high, amp = data
-#     NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
-#     NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
-#     NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
-#     NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
+#     if low:
+#         NOISE_PROFILE_LOW_FREQ.labels(RBPI_SERIAL).set(low)
+#     if mid:
+#         NOISE_PROFILE_MID_FREQ.labels(RBPI_SERIAL).set(mid)
+#     if high:
+#         NOISE_PROFILE_HIGH_FREQ.labels(RBPI_SERIAL).set(high)
+#     if amp:
+#         NOISE_PROFILE_AMP.labels(RBPI_SERIAL).set(amp)
 
 # ----------------------------------------------------------------------------------------------
 
