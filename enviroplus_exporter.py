@@ -347,7 +347,7 @@ def write_to_lcd():
     got_first_data = False
 
     while True:
-        try:
+        # try:
             if not got_first_data:
                 time.sleep(WRITE_TO_LCD_TIME)
                 sensor_data = collect_all_data()
@@ -393,8 +393,8 @@ def write_to_lcd():
 
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
-        except Exception as exception:
-            logging.warning('Exception writing to LCD: {}'.format(exception))
+        # except Exception as exception:
+        #     logging.warning('Exception writing to LCD: {}'.format(exception))
 
 def get_serial_number():
     """Get Raspberry Pi serial number to use as LUFTDATEN_SENSOR_UID"""
