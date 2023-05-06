@@ -333,12 +333,12 @@ def collect_all_data():
     # sensor_data['pm25'] = PM25.collect()[0].samples[0].value
     # sensor_data['pm10'] = PM10.collect()[0].samples[0].value
     sensor_data['cpu_temperature'] = CPU_TEMPERATURE.collect()[0].samples[0].value
-    sensor_data['battery_voltage'] = BATTERY_VOLTAGE.collect()[0].samples[0].value
-    sensor_data['battery_percentage'] = BATTERY_PERCENTAGE.collect()[0].samples[0].value
-    sensor_data['noise_profile_low_freq'] = NOISE_PROFILE_LOW_FREQ.collect()[0].samples[0].value
-    sensor_data['noise_profile_mid_freq'] = NOISE_PROFILE_MID_FREQ.collect()[0].samples[0].value
-    sensor_data['noise_profile_high_freq'] = NOISE_PROFILE_HIGH_FREQ.collect()[0].samples[0].value
-    sensor_data['noise_profile_amp'] = NOISE_PROFILE_AMP.collect()[0].samples[0].value
+    # sensor_data['battery_voltage'] = BATTERY_VOLTAGE.collect()[0].samples[0].value
+    # sensor_data['battery_percentage'] = BATTERY_PERCENTAGE.collect()[0].samples[0].value
+    # sensor_data['noise_profile_low_freq'] = NOISE_PROFILE_LOW_FREQ.collect()[0].samples[0].value
+    # sensor_data['noise_profile_mid_freq'] = NOISE_PROFILE_MID_FREQ.collect()[0].samples[0].value
+    # sensor_data['noise_profile_high_freq'] = NOISE_PROFILE_HIGH_FREQ.collect()[0].samples[0].value
+    # sensor_data['noise_profile_amp'] = NOISE_PROFILE_AMP.collect()[0].samples[0].value
 
     return sensor_data
 
