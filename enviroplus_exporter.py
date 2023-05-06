@@ -139,7 +139,7 @@ except ValueError:
 
 PREFIX = os.getenv('PREFIX', 'enviroplus_')
 
-TEMPERATURE = Gauge(PREFIX+'temperature','Temperature measured (*C)', ['serial'], ['serial'])
+TEMPERATURE = Gauge(PREFIX+'temperature','Temperature measured (*C)', ['serial'])
 PRESSURE = Gauge(PREFIX+'pressure','Pressure measured (hPa)', ['serial'])
 HUMIDITY = Gauge(PREFIX+'humidity','Relative humidity measured (%)', ['serial'])
 OXIDISING = Gauge(PREFIX+'oxidising','Mostly nitrogen dioxide but could include NO and Hydrogen (Ohms)', ['serial'])
