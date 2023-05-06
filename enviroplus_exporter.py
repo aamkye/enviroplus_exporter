@@ -329,9 +329,9 @@ def collect_all_data():
     sensor_data['nh3'] = NH3.collect()[0].samples[0].value
     sensor_data['lux'] = LUX.collect()[0].samples[0].value
     sensor_data['proximity'] = PROXIMITY.collect()[0].samples[0].value
-    sensor_data['pm1'] = PM1.collect()[0].samples[0].value
-    sensor_data['pm25'] = PM25.collect()[0].samples[0].value
-    sensor_data['pm10'] = PM10.collect()[0].samples[0].value
+    # sensor_data['pm1'] = PM1.collect()[0].samples[0].value
+    # sensor_data['pm25'] = PM25.collect()[0].samples[0].value
+    # sensor_data['pm10'] = PM10.collect()[0].samples[0].value
     sensor_data['cpu_temperature'] = CPU_TEMPERATURE.collect()[0].samples[0].value
     sensor_data['battery_voltage'] = BATTERY_VOLTAGE.collect()[0].samples[0].value
     sensor_data['battery_percentage'] = BATTERY_PERCENTAGE.collect()[0].samples[0].value
