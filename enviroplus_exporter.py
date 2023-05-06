@@ -6,7 +6,6 @@ import serial
 import os
 import math
 import logging
-import board
 import argparse
 from threading import Thread
 from prometheus_client import start_http_server, Gauge, Histogram
@@ -15,7 +14,6 @@ from PIL import Image, ImageDraw, ImageFont
 from enviroplus.noise import Noise
 from enviroplus import gas
 from bme280 import BME280
-from adafruit_lc709203f import LC709203F, PackSize
 
 try:
     from smbus2 import SMBus
