@@ -440,7 +440,7 @@ def write_to_lcd():
             else:
                 for _, v in variables.items():
                     sensor_data = collect_all_data()
-                    message = "{:.1f}{}".format(sensor_data[v.variable], v.unit)
+                    message = "{:.1f}{}".format(sensor_data[v["variable"]], v["unit"])
                     logging.debug('Writing to LCD: {}'.format(message))
 
                     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
@@ -453,13 +453,13 @@ def write_to_lcd():
                         fontBig = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", fontBig.size - 2)
                         _, _, size_x, size_y = draw.textbbox((0, 0), message, font=fontBig)
 
-                    lim = v.limits
+                    lim = v["limits"]
                     rgb = palette[0]
                     for j in range(len(lim)):
-                        if sensor_data[v.variable] > lim[j]:
+                        if sensor_data[v["variable"]] > lim[j]:
                             rgb = palette[j + 1]
 
-                    draw.text((0,0), v.name, font=fontSmall, fill=(0, 255, 0))
+                    draw.text((0,0), v["name"], font=fontSmall, fill=(0, 255, 0))
                     draw.text((math.floor((WIDTH/2)-(size_x/2)), math.floor((HEIGHT)-(size_y))), message, font=fontBig, fill=rgb)
                     st7735.display(img)
                     time.sleep(WRITE_TO_LCD_TIME)
