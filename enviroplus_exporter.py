@@ -380,7 +380,7 @@ def write_to_lcd():
                 img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
                 draw = ImageDraw.Draw(img)
                 font = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 60)
-                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 10)
+                font2 = ImageFont.truetype("/opt/UbuntuMonoNerdFontMono-Regular.ttf", 12)
                 size_x, size_y = draw.textsize(message, font)
 
                 while size_x > WIDTH:
