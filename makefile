@@ -3,7 +3,7 @@ all: preinstall install start enable
 clean: disable stop uninstall
 
 preinstall:
-	pip install -R requirements.txt
+	. /opt/venv/bin/activate; pip install -r requirements.txt
 
 install:
 	cp $(CURDIR)/enviroplus_exporter.py /usr/bin/enviroplus_exporter.py
